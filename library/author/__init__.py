@@ -1,1 +1,1 @@
-__author__ = "-TEST"
+__author__ = "YA-TEST"

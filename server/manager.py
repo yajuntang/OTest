@@ -1,7 +1,7 @@
 from flask import Flask, redirect, request
 from flask_cors import CORS
 
-from library.application.Client import Client
+from library.client.Client import Client
 from server.app.controller.exec_controller import exec_api
 from server.app.controller.page_version_controller import pages_version_api
 from server.app.controller.pages_controller import pages_api

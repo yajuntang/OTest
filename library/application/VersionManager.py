@@ -91,8 +91,3 @@ def download_file(url, file_path):
     else:
         with open(file_path, "wb") as f:
             f.write(r.content)
-
-
-# version = VersionManger("Android", "http://url.cn/5AjSUjg", "com.mayihezi.measure", "2.36.0", "1")
-#
-# print(version.check_version("127.0.0.1:7555", True))

@@ -17,3 +17,5 @@ __pycache__/
 /server/app/storage/
 /server/static/task_report/
 
+!/src/page/gen_readme.py
+/src/page/gen_readme.py

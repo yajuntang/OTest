@@ -6,9 +6,10 @@ import time
 import traceback
 from typing import List
 
-from library.application.App import AndroidApp, IOSApp
-from library.application.Task import PageData, Task
-from library.base.utils.thread_utils import stop_thread, TaskThread
+from library.application.IOSApp import IOSApp
+from library.application.AndroidApp import AndroidApp
+from library.client.Task import PageData, Task
+from library.utils.thread_utils import stop_thread, TaskThread
 
 __author__ = 'Cheryl'
 

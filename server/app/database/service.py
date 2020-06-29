@@ -1,9 +1,8 @@
 import os
 
-from airtest.utils.compat import script_dir_name
 from werkzeug.datastructures import FileStorage
 
-from library.application.Task import Task
+from library.client.Task import Task
 from server.app.database.database import DataBase
 from server.app.models.models import VersionModel, NodeModel, PlanModel
 from server.app.utils import dir_modules, plans_flat_to_dict

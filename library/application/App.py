@@ -4,28 +4,20 @@ import sys
 import inspect
 import os
 import shutil
-import threading
 import time
 import traceback
 from typing import List
 
-from adbutils import adb
 from airtest.core.api import connect_device, auto_setup, device, set_current, start_app, stop_app, snapshot
-from airtest.core.cv import try_log_screen
-from airtest.core.helper import using, logwrap, G
+from airtest.core.helper import using, logwrap
 from airtest.report.report import LogToHtml, HTML_TPL, LOGFILE
 from airtest.utils.compat import script_dir_name
 from airtest.utils.retry import retries
 from poco import Poco
-from poco.drivers.android.uiautomation import AndroidUiautomationPoco
-from poco.drivers.ios import iosPoco
 from tenacity import Retrying, wait_fixed, stop_after_attempt
 from wda import WDAError
-# pip3 install -U flask_cors  -i https://mirrors.aliyun.com/pypi/simple/
 
-from library.application.Task import PageData
-from library.application.VersionManager import VersionManger
-from library.base.utils.thread_utils import StopStatusThread, TaskThread
+from library.client.Task import PageData
 
 
 class App:
@@ -60,8 +52,8 @@ class App:
         if pages is None or len(pages) == 0:
             self.log("没有设置测试页面")
             raise ValueError("没有设置测试页面")
-            
-        pages = [page for page in map(lambda item: item if isinstance(item,PageData) else PageData(item), pages)]
+
+        pages = [page for page in map(lambda item: item if isinstance(item, PageData) else PageData(item), pages)]
 
         if ip:
             url = "{0}:{1}".format(ip, port)
@@ -256,82 +248,16 @@ class App:
         self.client.finished_task(self.task, self.test_result_status)
 
     def check_system_exit(self, e):
-        if isinstance(e,(SystemExit,SystemError)):
+        if isinstance(e, (SystemExit, SystemError)):
             raise e
 
 
-class AndroidApp(App):
-
-    def __init__(self, app_name=None, version_name=None, version_code=None, app_url=None):
-        super().__init__("Android", app_name, version_name, version_code, app_url)
-        self.check_poco_service = None
-
-    @retries(5)
-    def connect(self, driver_ip, driver_port, device_id):
-
-        if driver_ip and driver_port:
-            print(adb.connect("{0}:{1}".format(driver_ip, driver_port)))
-            if not device_id:
-                device_id = "{0}:{1}".format(driver_ip, driver_port)
-
-        if device_id:
-            self.device = retry_connect("android:///{0}".format(device_id))
-            # self.device = retry_connect("android:///{0}?cap_method=javacap&ori_method=adbori".format(device_id))
-
-        driver = AndroidUiautomationPoco(self.device, poll_interval=1)
-        self.device = device()
-        # 关闭截图
-        driver.screenshot_each_action = True
-
-        return driver
-
-    def check_version(self, version_name, version_code, app_url, is_cover_install=True):
-        if not version_name or not version_code:
-            return
-        version_manger = VersionManger(self.platform, app_url, self.app_name, version_name, version_code)
-        version_manger.check_version(self.device.uuid, is_cover_install)
-
-    def connected(self):
-        self.check_poco_service = StopStatusThread(check_poco_service)
-        self.check_poco_service.client_thread = self.client_thread
-        self.check_poco_service.start()
-
-    def finished(self):
-        super().finished()
-        if self.check_poco_service is not None:
-            self.check_poco_service.stop()
-
-
-def check_poco_service(stopped,client_thread):
+def check_poco_service(stopped, client_thread):
     while not stopped:
         if client_thread is not None and client_thread.stopped:
             return
         time.sleep(150)
         start_app('com.netease.open.pocoservice', 'TestActivity')
-
-
-class IOSApp(App):
-
-    def __init__(self, app_name=None):
-        super().__init__("IOS", app_name, None, None, None)
-
-    def connect(self, driver_ip, driver_port, device_id):
-
-        if driver_ip and driver_port:
-            self.device = retry_connect("ios:///http://{0}:{1}".format(driver_ip, driver_port))
-
-        elif device_id:
-            self.device = retry_connect("ios:///http://{0}".format(device_id))
-
-        driver = iosPoco(self.driver, poll_interval=1)
-        self.device = device()
-
-        # 关闭截图
-        driver.screenshot_each_action = True
-        return driver
-
-    def start_test(self, pages, ip='127.0.0.1', port=8081, device_id=None):
-        super().start_test(pages,ip,port,device_id)
 
 
 def retry_connect(uri=None, whether_retry=False, sleeps=5, max_attempts=3):

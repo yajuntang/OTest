@@ -5,7 +5,7 @@ from typing import List
 from flask import Blueprint, request
 from flask_cors import cross_origin
 
-from library.application.Task import Task, Device, AppInfo
+from library.client.Task import Task, Device, AppInfo
 from server.app.database.service import service
 from server.app.models.models import random_id, PlanModel
 from server.app.models.request_models import StartTestRequest, TaskRequest, TaskStepRequest

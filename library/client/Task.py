@@ -134,6 +134,8 @@ class PageData:
                     setattr(obj, item.name, item.value)
 
         self.obj = obj
+        if not hasattr(obj, 'test_case'):
+            obj.test_case = None
         return obj
 
     def get_test_methods(self):

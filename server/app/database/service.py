@@ -23,9 +23,17 @@ default_db_name = ''
 
 class Service:
     def __init__(self):
+        """
+        初始化数据库
+        """
         self.__db = DataBase(url)
 
     def update_pages_version_info(self, version: VersionModel):
+        """
+        更新页面版本信息到数据库
+        :param version:
+        :return:
+        """
         versions = self.find_all_version_pages()
         new_versions = []
         for item in versions:
@@ -40,6 +48,11 @@ class Service:
         self.__db.save_to_db(default_db_name, version_pages_table_name, new_versions)
 
     def del_pages_versions(self, version: VersionModel):
+        """
+        从数据中删除页面版本信息
+        :param version:
+        :return:
+        """
         versions = self.find_all_version_pages()
         new_versions = []
         for item in versions:
@@ -48,9 +61,19 @@ class Service:
         self.__db.save_to_db(default_db_name, version_pages_table_name, new_versions)
 
     def del_pages_info(self, version: VersionModel):
+        """
+        删除页面信息
+        :param version:
+        :return:
+        """
         self.__db.drop_table(default_db_name, version.pages_table_name)
 
     def find_all_version_pages(self, include_del=True) -> List[VersionModel]:
+        """
+        查找所有的版本列表
+        :param include_del:
+        :return:
+        """
         versions = []
         versions_data = self.__db.find_from_db_and_cover_json(default_db_name, version_pages_table_name, [])
         for item in versions_data:
@@ -62,12 +85,23 @@ class Service:
         return versions
 
     def find_version_by_id(self, version_id, include_del=False) -> VersionModel:
+        """
+        通过id查询版本信息
+        :param version_id:
+        :param include_del:
+        :return:
+        """
         versions = self.find_all_version_pages(include_del)
         for item in versions:
             if item.version_id == version_id:
                 return item
 
     def parse_pages_info_and_save(self, version: VersionModel) -> bool:
+        """
+        解析页面数据并保存
+        :param version:
+        :return:
+        """
         try:
             pages_data = dir_modules(version.path)
         except:
@@ -75,12 +109,23 @@ class Service:
         return self.save_pages_info(version, pages_data)
 
     def save_pages_info(self, version: VersionModel, pages_data: List[NodeModel]) -> bool:
+        """
+        保存页面信息
+        :param version:
+        :param pages_data:
+        :return:
+        """
         if pages_data.__len__() == 0:
             return False
         self.__db.save_to_db(default_db_name, version.get_pages_table_name(), pages_data)
         return True
 
     def find_pages_info(self, version: VersionModel) -> List[NodeModel]:
+        """
+        查找页面信息
+        :param version:
+        :return:
+        """
         pages_data = []
         pages_data_dict = self.__db.find_from_db_and_cover_json(default_db_name, version.get_pages_table_name(), [])
 
@@ -90,6 +135,11 @@ class Service:
         return pages_data
 
     def update_plan(self, plan: PlanModel):
+        """
+        更新测试计划
+        :param plan:
+        :return:
+        """
         plans = self.find_all_plan()
         temp_plans = plans
         new_plans = []
@@ -120,6 +170,11 @@ class Service:
         self.__db.save_to_db(default_db_name, plan_table_name, plans)
 
     def del_plan(self, plan: PlanModel):
+        """
+        删除测试计划
+        :param plan:
+        :return:
+        """
         plans = self.find_all_plan()
         temp_plans = []
 
@@ -137,12 +192,21 @@ class Service:
         self.__db.save_to_db(default_db_name, plan_table_name, temp_plans)
 
     def find_plan_by_id(self, plan_id) -> PlanModel:
+        """
+        通过id查找即测试计划
+        :param plan_id:
+        :return:
+        """
         plans = self.find_all_plan()
         plans_dict = plans_flat_to_dict(plans)
         if plan_id in plans_dict:
             return plans_dict[plan_id]
 
     def find_all_plan(self) -> List[PlanModel]:
+        """
+        查找所有的测试计划
+        :return:
+        """
         plans = []
         plan_data = self.__db.find_from_db_and_cover_json(default_db_name, plan_table_name, [])
         for item in plan_data:
@@ -150,11 +214,22 @@ class Service:
         return plans
 
     def find_selected_pages_by_plan(self, plan):
+        """
+        查找指定测试计划的选择的页面
+        :param plan:
+        :return:
+        """
         version = self.find_version_by_id(plan.version_id)
         selected_node = plan.selected_page_node
         return self.find_selected_pages_by_selected_node(version, selected_node)
 
     def find_selected_pages_by_selected_node(self, version, selected_node):
+        """
+        通过节点查找选择的页面
+        :param version:
+        :param selected_node:
+        :return:
+        """
         if len(selected_node) == 0: return []
         new_pages = []
         pages = self.find_pages_info(version)
@@ -197,6 +272,11 @@ class Service:
         return new_pages
 
     def get_test_plans(self, plan_id) -> List[PlanModel]:
+        """
+        获取测试计划
+        :param plan_id:
+        :return:
+        """
         test_plans = []
         plan = self.find_plan_by_id(plan_id)
 
@@ -213,6 +293,11 @@ class Service:
         return test_plans
 
     def find_task_group_by_group_id(self, group_id) -> List[Task]:
+        """
+        查找任务组通过任务组id
+        :param group_id:
+        :return:
+        """
         group_task_obj = []
         group_task = self.__db.find_from_db_and_cover_json(task_db_name, group_id, [])
         for item in group_task:
@@ -220,6 +305,10 @@ class Service:
         return group_task_obj
 
     def find_all_task(self) -> List[Task]:
+        """
+        查找所有的任务
+        :return:
+        """
         tasks = []
         tasks_groups = self.__db.find_from_db_and_cover_json(task_db_name, task_table_name, [])
         for group_id in tasks_groups:
@@ -228,10 +317,19 @@ class Service:
         return tasks
 
     def find_all_group(self) -> List[str]:
+        """
+        查找所有的任务组
+        :return:
+        """
         tasks_groups = self.__db.find_from_db_and_cover_json(task_db_name, task_table_name, [])
         return tasks_groups
 
     def update_task_groups(self, group_ids):
+        """
+        更新任务组
+        :param group_ids:
+        :return:
+        """
         tasks_groups = self.__db.find_from_db_and_cover_json(task_db_name, task_table_name, [])
         for group_id in group_ids:
             if group_id not in tasks_groups:
@@ -239,6 +337,11 @@ class Service:
         self.__db.save_to_db(task_db_name, task_table_name, tasks_groups)
 
     def remove_task_groups(self, group_ids):
+        """
+        移除整个任务组
+        :param group_ids:
+        :return:
+        """
         tasks_groups = self.__db.find_from_db_and_cover_json(task_db_name, task_table_name, [])
         for group_id in tasks_groups[:]:
             if group_id in group_ids:
@@ -246,6 +349,11 @@ class Service:
         self.__db.save_to_db(task_db_name, task_table_name, tasks_groups)
 
     def update_task(self, update_task: Task):
+        """
+        更新某个任务
+        :param update_task:
+        :return:
+        """
         group_task = self.find_task_group_by_group_id(update_task.group_id)
 
         for item in group_task:
@@ -261,6 +369,11 @@ class Service:
         self.update_task_groups([update_task.group_id])
 
     def update_tasks(self, update_tasks: List[Task]):
+        """
+        更新一批任务
+        :param update_tasks:
+        :return:
+        """
         group_ids = set()
 
         for update_task in update_tasks:
@@ -280,6 +393,12 @@ class Service:
         self.update_task_groups(group_ids)
 
     def del_task(self, group_id, task_id):
+        """
+        删除某个任务
+        :param group_id:
+        :param task_id:
+        :return:
+        """
         group_task = self.find_task_group_by_group_id(group_id)
         del_task = None
         for task in group_task:
@@ -298,25 +417,59 @@ class Service:
             self.__db.save_to_db(task_db_name, group_id, group_task)
 
     def find_task_by_task_id(self, group_id, task_id):
+        """
+        查找某个任务 通过任务id
+        :param group_id:
+        :param task_id:
+        :return:
+        """
         group_task = self.find_task_group_by_group_id(group_id)
         for item in group_task:
             if item.task_id == task_id: return item
 
     def get_log_by_task(self, task: Task):
+        """
+        获取该任务的日志
+        :param task:
+        :return:
+        """
         log = self.__db.find(task_db_name, task.get_log_table_name(), None)
         return log
 
     def append_log_by_task(self, task: Task, log):
+        """
+        追加该任务的日志
+        :param task:
+        :param log:
+        :return:
+        """
         self.__db.append(task_db_name, task.get_log_table_name(), log + "\n")
 
     def get_step_by_task(self, task: Task):
+        """
+        获取该任务的测试步骤
+        :param task:
+        :return:
+        """
         log = self.__db.find(task_db_name, task.get_step_table_name(), None)
         return log
 
     def append_step_by_task(self, task: Task, log):
+        """
+        追加该任务的测试步骤
+        :param task:
+        :param log:
+        :return:
+        """
         self.__db.append(task_db_name, task.get_step_table_name(), log + "\n")
 
     def save_report(self, task, files: Dict[str, FileStorage]):
+        """
+        保存报告
+        :param task:
+        :param files:
+        :return:
+        """
         table = os.path.join(report_url, task.task_id)
         if not os.path.exists(table):
             os.makedirs(table, exist_ok=True)
@@ -342,9 +495,18 @@ class Service:
         return index_html
 
     def update_appIds(self, appIds: List[str]):
+        """
+        保存appid列表
+        :param appIds:
+        :return:
+        """
         self.__db.save_to_db(default_db_name, 'appIds.data', appIds)
 
     def find_all_appIds(self):
+        """
+        查找所有的appid
+        :return:
+        """
         return self.__db.find_from_db_and_cover_json(default_db_name, 'appIds.data', [])
 
 

@@ -14,36 +14,61 @@ from server.app.models.models import NodeModel, PlanModel, PageDataModel
 
 
 class ObjJSONEncoder(json.JSONEncoder):
+    """
+    class to json
+    """
     def default(self, o):
         if not isinstance(o, (list, dict)):
             return o.__dict__
 
 
 def make_response(data, code=1):
+    """返回json数据"""
     return response(obj_to_json({'code': code, 'data': data}))
 
 
 def make_response_not_to_json(data):
+    """返回raw数据"""
     return response(data)
 
 
 def make_no_data_response(desc=None, code=1):
+    """正常返回"""
     return response(obj_to_json({'code': code, 'desc': desc}))
 
 
 def make_error_response(desc=None, code=-1):
+    """返回错误"""
     return response(obj_to_json({'code': code, 'desc': desc}))
 
 
 def obj_to_json(obj):
+    """
+    class to json
+    :param obj:
+    :return:
+    """
     return json.dumps(obj, cls=ObjJSONEncoder)
 
 
 def node_info(name, alias, key, type):
+    """
+    节点信息
+    :param name:
+    :param alias:
+    :param key:
+    :param type:
+    :return:
+    """
     return NodeModel(name, alias, key, type)
 
 
 def get_module_path(m):
+    """
+    获取模块路径
+    :param m:
+    :return:
+    """
     path = m.__path__
     if isinstance(path, list):
         return path[0]
@@ -52,6 +77,11 @@ def get_module_path(m):
 
 
 def dir_modules(path):
+    """
+    列出代码
+    :param path:
+    :return:
+    """
     modules = []
     parse_modules(path, modules)
 
@@ -73,6 +103,12 @@ def dir_modules(path):
 
 
 def parse_modules(path, modules):
+    """
+    解析模块内容
+    :param path:
+    :param modules:
+    :return:
+    """
     m = importlib.import_module(path.replace("/", "."))
     dirs = [item for item in os.listdir(get_module_path(m)) if
             item not in ("__pycache__", "__init__.py")]

@@ -6,9 +6,20 @@ import requests
 
 
 class VersionManger:
+    """
+    版本控制器
+    """
     app_path = os.path.join(os.path.abspath(os.path.dirname(os.path.dirname(__file__))), "apps")
 
     def __init__(self, platform, url, app_name, version_name, version_code):
+        """
+        初始化
+        :param platform: 平台
+        :param url: 需要下载的app链接
+        :param app_name:
+        :param version_name:
+        :param version_code:
+        """
         self.platform = platform
         self.app_name = app_name
         self.url = url

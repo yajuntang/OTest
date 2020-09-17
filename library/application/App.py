@@ -21,12 +21,21 @@ from library.client.Task import PageData
 
 
 class App:
+    """
+    框架主体
+    """
     platform = None
     driver = None
     device = None
     app_name = None
 
     def __init__(self, platform, app_name, version_name=None, version_code=None, app_url=None, is_cover_install=False):
+        """
+        初始化
+        :param platform: 平台 Android IOS
+        :param app_name: app的包名
+        :param app_url: app的安装路径
+        """
         self.platform = platform
         self.app_name = app_name
         self.client_thread = None
@@ -37,15 +46,29 @@ class App:
         self.log_path = None
         self.client = None
         self.task = None
-        self.test_result_status = True
+        self.test_result_status = True #本次测试是否成功，但凡有一个测试用例报错都算失败
 
     def set_client_task(self, client, task):
+        """
+        如果有时候前端页面，连接将会保存在client中
+        :param client: 客户端
+        :param task: 任务
+        :return: 日志地址
+        """
         self.client = client
         self.task = task
         return self.log_path
 
     def start_test(self, pages, ip=None, port=None, device_id=None):
 
+        """
+        开始测试
+        :param pages: 待测试的页面列表
+        :param ip: 测试手机的IP地址 option
+        :param port: 测试手机的端口号 option
+        :param device_id: 测试手机的设备id option
+        :return:
+        """
         self.log_path = setup_log_path(create_report_dir(self.platform))
         auto_setup(__file__, logdir=self.log_path)
 
@@ -92,6 +115,11 @@ class App:
             self.log_step("生成报告", "")
 
     def do_test(self, pages: List[PageData]):
+        """
+        执行测试
+        :param pages: 带数据的Page
+        :return:
+        """
         for page_info in pages:
 
             name = page_info.get_log_name()
@@ -127,7 +155,7 @@ class App:
             for m in page_info.get_test_methods():
 
                 try:
-                    self.do_test_method(page_info, name, page, m, log_method_failed)
+                    self.do_test_method(page_info, page, m, log_method_failed)
                 except BaseException as e:
                     self.check_system_exit(e)
                     print(e)
@@ -144,12 +172,20 @@ class App:
                 log_method_failed("tearDownClass", traceback.format_exc())
 
     @retries(max_tries=10, exceptions=ZeroDivisionError)
-    def do_test_method(self, page_info, name, page, m, log_method_failed):
+    def do_test_method(self, page_info, page, m, log_method_failed):
+        """
+        执行测试方法
+        :param page_info: 装载执行测试的页面信息
+        :param page: 执行测试的页面
+        :param m: 执行测试的方法
+        :param log_method_failed: 执行测试方法失败后的回调
+        :return:
+        """
 
         try:
             method_args = page_info.get_method_data(m)
             method_args_log = PageData.format_method_log("({0})".format(method_args))
-            self.log("执行{0}::{1}".format(name, m.__name__) + method_args_log)
+            self.log("执行{0}::{1}".format(page_info.get_log_name(), m.__name__) + method_args_log)
             page.setUp()
         except Exception as e:
             if isinstance(e, ZeroDivisionError):
@@ -193,10 +229,21 @@ class App:
             set_current(self.device.uuid)
 
     def start_app(self, activity=None):
+        """
+        启动app
+        :param activity: 启用的页面 only android
+        :return:
+        """
         self.check_device()
         start_app(self.app_name, activity)
 
     def snapshot(self, filename=None, msg=''):
+        """
+        截图
+        :param filename: 文件名称，可以为空 默认是使用时间作为文件的名字
+        :param msg: 截图注释
+        :return:
+        """
         try:
             snapshot(filename=filename, msg=msg)
         except Exception as e:
@@ -204,55 +251,122 @@ class App:
             traceback.print_exc()
 
     def stop_app(self):
+        """
+        杀掉app
+        :return:
+        """
         self.check_device()
         stop_app(self.app_name)
 
     def inject_pages_info(self, page):
+        """
+        注入页面driver和平台信息
+        """
         page.platform = self.platform
         page.app = self
         page._driver = self.driver
         page.app_name = self.app_name
+        page.test_case = None
 
     def connect(self, driver_ip, driver_port, device_id) -> Poco:
+        """
+        连接设备
+        :param driver_ip: 设备IP
+        :param driver_port: 设备端口
+        :param device_id: 设备id
+        :return:
+        """
         pass
 
     def connected(self):
+        """
+        连接成功的回调
+        :return:
+        """
         pass
 
     def check_version(self, version_name, version_code, app_url, is_cover_install=True):
+        """
+        检测版本
+        :param version_name: 版本名称
+        :param version_code: 版本号
+        :param app_url: 需要下载目标app的链接
+        :param is_cover_install: 是否覆盖安装，默认true
+        :return:
+        """
         pass
 
     def log(self, log):
+        """
+        把日志发送到服务器，并记录起来
+        :param log:
+        :return:
+        """
         if self.client is None:
             return
         self.client.log(self.task, log)
 
     def log_step(self, title, sub_title, successful=True, message=None, attach=None):
+        """
+        把测试步骤发送服务器，并保存
+        :param title: 步骤标题
+        :param sub_title: 步骤描述
+        :param successful: 记录测试的成功还是失败，用于在前端页面进行回测
+        :param message: 异常的错误信息或者正常的信息
+        :param attach: 记录此次步骤是哪个页面，哪个方法，用于在前端页面进行回测
+        :return:
+        """
         if self.client is None:
             return
         self.client.log_step(self.task, title, sub_title, message, attach, successful)
 
     def log_error(self, log):
+        """
+        记录错误类型的日志
+        :param log: message
+        :return:
+        """
         if self.client is None:
             return
         self.client.log_error(self.task, log)
 
     def upload_report(self, path, name):
+        """
+        把本地生成的报告，上传到服务器
+        :param path:
+        :param name:
+        :return:
+        """
         if self.client is None:
             return
         self.client.upload_report(self.task, os.path.join(path, name))
 
     def finished(self):
+        """
+        测试结束后，告知服务器
+        :return:
+        """
         if self.client is None:
             return
         self.client.finished_task(self.task, self.test_result_status)
 
     def check_system_exit(self, e):
+        """
+        判断检测android pocoservice的线程 是否退出了
+        :param e:
+        :return:
+        """
         if isinstance(e, (SystemExit, SystemError)):
             raise e
 
 
 def check_poco_service(stopped, client_thread):
+    """
+    每隔150 启动 poco_service
+    :param stopped:
+    :param client_thread:
+    :return:
+    """
     while not stopped:
         if client_thread is not None and client_thread.stopped:
             return
@@ -261,6 +375,14 @@ def check_poco_service(stopped, client_thread):
 
 
 def retry_connect(uri=None, whether_retry=False, sleeps=5, max_attempts=3):
+    """
+    尝试重连，默认三次，每次间隔5秒
+    :param uri:
+    :param whether_retry:
+    :param sleeps:
+    :param max_attempts:
+    :return:
+    """
     if not whether_retry:
         max_attempts = 1
 
@@ -273,15 +395,23 @@ def retry_connect(uri=None, whether_retry=False, sleeps=5, max_attempts=3):
 
 
 def report(task, log_path):
+    """
+    生成报告
+    :param task: 前端配置的任务
+    :param log_path:日志的路径
+    :return:
+    """
     path, name = script_dir_name(__file__)
     try:
         m = importlib.import_module('config')
-        m.__title__ = task.name
+        if task is not None:
+            m.__author__ = task.name
         path, name = script_dir_name(m.__file__)
     except:
         try:
             m = importlib.import_module('library.author')
-            m.__title__ = task.name
+            if task is not None:
+                m.__author__ = task.name
             path, name = script_dir_name(m.__file__)
         except:
             if task is not None:
@@ -299,6 +429,11 @@ def report(task, log_path):
 
 
 def setup_log_path(log_path):
+    """
+    设置日志的路径
+    :param log_path: 日志的路径
+    :return:
+    """
     if os.path.exists(log_path):
         shutil.rmtree(log_path)
     if not os.path.exists(log_path):
@@ -307,14 +442,23 @@ def setup_log_path(log_path):
 
 
 def log_page_name(name):
+    """
+    记录当前测试页面的名字
+    :param name:
+    :return:
+    """
     def log_page_name_func():
         pass
-
     log_page_name_func.__name__ = name
     logwrap(log_page_name_func)()
 
 
 def create_report_dir(platform) -> str:
+    """
+    创建报告生成的文件夹
+    :param platform: 区分不同的平台
+    :return:
+    """
     log_dir = "log/{0}/{1}".format(platform.lower(), (int(time.time())))
     path, name = script_dir_name(__file__)
     log_path = os.path.join(os.path.dirname(os.path.dirname(path)), log_dir)

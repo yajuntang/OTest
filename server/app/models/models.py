@@ -19,6 +19,9 @@ class BaseModel:
 
 
 class PageDataModel(BaseModel):
+    """
+    页面数据bean类
+    """
 
     def __init__(self, id, name, value):
         self.id = id
@@ -27,17 +30,35 @@ class PageDataModel(BaseModel):
 
     @classmethod
     def parse(cls, data):
+        """
+        dict to class
+        :param data:
+        :return:
+        """
         return PageDataModel(data['id'], data['name'], data['value'])
 
     @classmethod
     def create(cls, name, value=None):
+        """
+        创建一个bean类
+        :param name:全限定类名
+        :param value: 数据
+        :return:
+        """
         return PageDataModel(random_id(), name, value)
 
     def copy(self):
+        """
+        复制一个PageDataModel
+        :return:
+        """
         return PageDataModel.create(self.name, self.value)
 
 
 class NodeModel(BaseModel):
+    """
+    页面节点
+    """
 
     def __init__(self, name, alias, key, type):
         self.title = alias if alias else name
@@ -61,6 +82,9 @@ class NodeModel(BaseModel):
 
 
 class VersionModel(BaseModel):
+    """
+    版本bean类
+    """
 
     def __init__(self, version_id, version_name, path, is_del=False):
         self.version_id = version_id
@@ -70,6 +94,10 @@ class VersionModel(BaseModel):
         self.pages_table_name = None
 
     def get_pages_table_name(self):
+        """
+        获取表名
+        :return:
+        """
         if self.pages_table_name is None:
             self.pages_table_name = hashlib.md5(self.version_id.encode(encoding='UTF-8')).hexdigest()
         return self.pages_table_name
@@ -86,6 +114,9 @@ class VersionModel(BaseModel):
 
 
 class PlanModel(BaseModel):
+    """
+    版本计划bean类
+    """
 
     def __init__(self, plan_id, name, version_id, parent_id):
         self.plan_id = plan_id

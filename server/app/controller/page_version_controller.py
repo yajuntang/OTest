@@ -13,6 +13,10 @@ pages_version_api = Blueprint('pages_version_api', __name__)
 @pages_version_api.route("/get_version_pages")
 @cross_origin()
 def get_version_pages():
+    """
+    获取版本列表
+    :return:
+    """
     versions = service.find_all_version_pages(include_del=False)
     pages = []
     for item in versions:
@@ -27,6 +31,10 @@ def get_version_pages():
 @pages_version_api.route("/get_plan_version_pages")
 @cross_origin()
 def get_plan_version_pages():
+    """
+    获取版本计划列表 包括删除的
+    :return:
+    """
     versions = service.find_all_version_pages(include_del=True)
     pages = []
     for item in versions:
@@ -42,6 +50,11 @@ def get_plan_version_pages():
 @pages_version_api.route("/add_version", methods=['post'])
 @model_request(cls=VersionHandleRequest)
 def add_version(data: VersionHandleRequest):
+    """
+    添加版本
+    :param data:
+    :return:
+    """
     version = VersionModel.create(data.version_name, data.path)
     if not service.parse_pages_info_and_save(version):
         return make_error_response("添加失败,请检查你的代码路径(path)")
@@ -52,6 +65,11 @@ def add_version(data: VersionHandleRequest):
 @pages_version_api.route("/copy_version", methods=['post'])
 @model_request(cls=VersionHandleRequest)
 def copy_version(data: VersionHandleRequest):
+    """
+    复制一个版本
+    :param data:
+    :return:
+    """
     version = VersionModel.create(data.version_name, data.path)
     pages_data = []
     try:
@@ -72,6 +90,11 @@ def copy_version(data: VersionHandleRequest):
 @pages_version_api.route("/del_version", methods=['post'])
 @model_request(cls=VersionHandleRequest)
 def del_version(data: VersionHandleRequest):
+    """
+    删除版本
+    :param data:
+    :return:
+    """
     version = service.find_version_by_id(data.version_id)
     if version is None:
         return make_error_response("版本错误")

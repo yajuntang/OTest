@@ -4,6 +4,9 @@ from server.app.models.models import BaseModel, PageDataModel, VersionModel, Pla
 
 
 class SavePageDataRequest(BaseModel):
+    """
+    保存页面的请求实体
+    """
 
     def __init__(self, version_id, node_key, data: List[PageDataModel]):
         self.version_id = version_id
@@ -19,6 +22,9 @@ class SavePageDataRequest(BaseModel):
 
 
 class VersionHandleRequest(VersionModel):
+    """
+    版本处理的请求实体
+    """
 
     @classmethod
     def parse(cls, data):
@@ -29,6 +35,9 @@ class VersionHandleRequest(VersionModel):
 
 
 class PlanHandleRequest(PlanModel):
+    """
+    测试计划处理的请求实体
+    """
 
     @classmethod
     def parse(cls, data):
@@ -54,6 +63,10 @@ class PlanHandleRequest(PlanModel):
 
 
 class StartTestRequest(BaseModel):
+    """
+    开始测试的请求实体
+    """
+
 
     def __init__(self, plan_id=None, platform=None, ip=None, port=None, device_id=None,app_id=None):
         self.platform = platform
@@ -87,6 +100,10 @@ class TaskRequest(BaseModel):
 
 
 class TaskStepRequest(BaseModel):
+    """
+    测试步骤的请求实体
+    """
+
 
     def __init__(self, group_id, task_id, title, sub_title, message=None, attach=None, successful=False):
         self.task_id = task_id

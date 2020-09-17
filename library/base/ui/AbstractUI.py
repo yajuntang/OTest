@@ -6,7 +6,7 @@ UI_TIME_OUT = 120
 class AbstractUI:
 
     @abstractmethod
-    def setUp(self, driver, is_ios,test_case):
+    def setUp(self, driver, is_ios, test_case):
         pass
 
     @abstractmethod
@@ -15,6 +15,10 @@ class AbstractUI:
 
     @abstractmethod
     def __getitem__(self, item):
+        return self
+
+    @abstractmethod
+    def get_ui(self):
         return self
 
     @abstractmethod
@@ -37,14 +41,10 @@ class AbstractUI:
     def parent(self):
         return self
 
-    @abstractmethod
-    def freeze(self):
-       return self
-
     # ======================UI=========================#
 
     @abstractmethod
-    def click(self):
+    def click(self,focus):
         return
 
     @abstractmethod
@@ -52,7 +52,7 @@ class AbstractUI:
         return
 
     @abstractmethod
-    def swipe(self, direction, focus=None, duration=0.5):
+    def swipe(self, direction, focus=None):
         return
 
     @abstractmethod
@@ -61,7 +61,7 @@ class AbstractUI:
 
     @abstractmethod
     def wait_for_appearance(self, timeout=UI_TIME_OUT):
-       pass
+        pass
 
     @abstractmethod
     def wait_for_disappearance(self, timeout=UI_TIME_OUT):
@@ -88,7 +88,23 @@ class AbstractUI:
         pass
 
     @abstractmethod
-    def find(self, direction='vertical', percent=0.3, duration=1.0, timeout=UI_TIME_OUT):
+    def get_position(self,focus):
+        pass
+
+    @abstractmethod
+    def get_bounds(self):
+        pass
+
+    @abstractmethod
+    def child_count(self):
+        pass
+
+    @abstractmethod
+    def get_name(self):
+        pass
+
+    @abstractmethod
+    def find(self, direction='vertical', percent=0.3, duration=0.1, timeout=UI_TIME_OUT):
         pass
 
     @abstractmethod

@@ -1,6 +1,7 @@
 import time
 
-from airtest.core.api import touch, wait as airtest_wait, sleep, text,loop_find, swipe as swipe_airtest,snapshot as airtest_snapshot
+from airtest.core.api import touch, wait as airtest_wait, sleep, text, loop_find, swipe as airtest_swipe, \
+    snapshot as airtest_snapshot
 from airtest.core.error import TargetNotFoundError
 from airtest.core.helper import logwrap
 from poco import Poco
@@ -8,144 +9,169 @@ from poco.exceptions import PocoNoSuchNodeException, PocoTargetRemovedException,
 from poco.proxy import UIObjectProxy
 from tenacity import Retrying, retry_if_exception_type, wait_fixed, stop_after_attempt
 
-from library.base.ui.AbstractUI import AbstractUI
+from library.base.ui.AbstractUI import AbstractUI, UI_TIME_OUT
+from library.base.ui.UI import Node
 
-UI_TIME_OUT = 120
 
 
 class AirTestUI(AbstractUI):
     poco: Poco = None
     is_airtest = True
+    is_ios = False
 
-    def setUp(self, driver, is_ios,test_case):
+    def setUp(self, driver, is_ios, test_case):
         self.poco = driver
-        kw = self.kw if not is_ios else self.iosKw
+        self.is_ios = is_ios
+        self.poco_ui = None
+        self.temp_pending_nodes.clear()
+        self.temp_ios_pending_nodes.clear()
+
+    def __init__(self, **kw):
+        self.kw = kw
+        self.init_pending_nodes = []
+        self.init_ios_pending_nodes = []
+        self.temp_pending_nodes = []
+        self.temp_ios_pending_nodes = []
+        self.poco_ui: UIObjectProxy = None
+        self.airtest_ui = None
+        self.iosKw = None
+
+    def __call__(self, *args, **kwargs):
+        self.iosKw = kwargs
+        return self
+
+    def get_ui(self):
+        if self.poco is None: return
+        # if self.poco_ui is not None: return
+
+        kw = self.kw if not self.is_ios else self.iosKw
         if kw is None: kw = self.kw
 
         self.kw = kw
-
-        pending_nodes = [node for node in self.pending_nodes if node.is_ios_data == is_ios]
 
         self.is_airtest = 'img' in kw
 
         if self.is_airtest:
             self.airtest_ui = kw['img']
-            self.pending_nodes.clear()
         else:
-            self.poco_ui = driver(**kw)
+            self.poco_ui = self.poco(**kw)
+            pending_nodes = self.init_pending_nodes if not self.is_ios else self.init_ios_pending_nodes
             if pending_nodes.__len__() > 0:
                 for node in pending_nodes:
-                    if node.node_type == Node.parent:
-                        self.parent()
-                    elif node.node_type == Node.getitem:
-                        self.__getitem__(node.name)
-                    elif node.node_type == Node.children:
-                        self.children()
-                    elif node.node_type == Node.child:
-                        self.child(node.name, **node.kw)
-                    elif node.node_type == Node.sibling:
-                        self.sibling(node.name, **node.kw)
-                    elif node.node_type == Node.offspring:
-                        self.offspring(node.name, **node.kw)
-                    elif node.node_type == Node.freeze:
-                        self.freeze()
-
-    def __init__(self, **kw):
-        self.kw = kw
-        self.pending_nodes = []
-        self.poco_ui: UIObjectProxy = None
-        self.airtest_ui = None
-        self.is_ios_data = False
-        self.iosKw = None
-
-    def __call__(self, *args, **kwargs):
-        self.iosKw = kwargs
-        self.is_ios_data = True
+                    self.do_pending(node)
+            pending_nodes = self.temp_pending_nodes if not self.is_ios else self.temp_ios_pending_nodes
+            if pending_nodes.__len__() > 0:
+                for node in pending_nodes:
+                    self.do_pending(node)
         return self
 
     def __getitem__(self, item):
-        if self.poco_ui is not None:
-            try:
-                self.wait()
-            except Exception:
-                pass
-            self.poco_ui = self.poco_ui.__getitem__(item)
-        else:
-            self.pending_nodes.append(Node(self.is_ios_data, Node.getitem, item))
+        self.get_pending_nodes().append(Node(Node.getitem, item))
         return self
 
     def child(self, name=None, **attrs):
-        if self.poco_ui is not None:
-            self.poco_ui = self.poco_ui.child(name, **attrs)
-        else:
-            self.pending_nodes.append(Node(self.is_ios_data, Node.child, name, **attrs))
+        self.get_pending_nodes().append(Node(Node.child, name, **attrs))
+        self.get_ui()
         return self
 
     def children(self):
-        if self.poco_ui is not None:
-            self.poco_ui = self.poco_ui.children()
-        else:
-            self.pending_nodes.append(Node(self.is_ios_data, Node.children))
+        self.get_pending_nodes().append(Node(Node.children))
+        self.get_ui()
         return self
 
     def offspring(self, name=None, **attrs):
-        if self.poco_ui is not None:
-            self.poco_ui = self.poco_ui.offspring(name, **attrs)
-        else:
-            self.pending_nodes.append(Node(self.is_ios_data, Node.offspring, name, **attrs))
+        self.get_pending_nodes().append(Node(Node.offspring, name, **attrs))
+        self.get_ui()
         return self
 
     def sibling(self, name=None, **attrs):
-        if self.poco_ui is not None:
-            self.poco_ui = self.poco_ui.sibling(name, **attrs)
-        else:
-            self.pending_nodes.append(Node(self.is_ios_data, Node.sibling, name, **attrs))
+        self.get_pending_nodes().append(Node(Node.sibling, name, **attrs))
+        self.get_ui()
         return self
 
     def parent(self):
-        if self.poco_ui is not None:
-            self.poco_ui = self.poco_ui.parent()
-        else:
-            self.pending_nodes.append(Node(self.is_ios_data, Node.parent))
+        self.get_pending_nodes().append(Node(Node.parent))
+        self.get_ui()
         return self
 
-    def freeze(self):
-        if self.poco_ui is not None:
-            with self.poco.freeze() as freeze:
-                self.poco_ui = freeze(**self.kw)
+    def do_pending(self, node):
+        if node.node_type == Node.parent:
+            self.poco_ui = self.poco_ui.parent()
+        elif node.node_type == Node.getitem:
+            @logwrap
+            def get_item():
+                self.poco_ui = self.poco_ui.__getitem__(node.name)
+            get_item()
+
+        elif node.node_type == Node.children:
+            self.poco_ui = self.poco_ui.children()
+        elif node.node_type == Node.child:
+            self.child(node.name, **node.kw)
+            self.poco_ui = self.poco_ui.child(node.name, **node.kw)
+        elif node.node_type == Node.sibling:
+            self.poco_ui = self.poco_ui.sibling(node.name, **node.kw)
+        elif node.node_type == Node.offspring:
+            self.poco_ui = self.poco_ui.offspring(node.name, **node.kw)
+
+    def get_pending_nodes(self):
+        if not self.is_ios:
+            return self.temp_pending_nodes
         else:
-            self.pending_nodes.append(Node(self.is_ios_data, Node.freeze))
-        return self
+            return self.temp_ios_pending_nodes
 
     # ======================UI=========================#
 
-    def click(self):
+    def click(self,focus=None):
+        self.get_ui()
         if self.is_airtest:
             return self._air_touch()
         else:
             @logwrap
             def click():
-                return self.poco_ui.click()
+                return self.poco_ui.click(focus)
 
             return click()
 
-    def exists(self, is_retry=True, sleeps=2, max_attempts=2, **kwargs):
+    def click_without_pic(self):
+        self.get_ui()
         if self.is_airtest:
-            return self._air_exists(is_retry, sleeps, max_attempts, **kwargs)
+            return self._air_touch()
         else:
-            return self._poco_exists(is_retry, sleeps, max_attempts)
+            return self.poco_ui.click()
 
-    def swipe(self, direction, focus=None, duration=0.5):
+    def exists(self, is_retry=True, sleeps=2, max_attempts=2, **kwargs):
+        self.get_ui()
+        self._exists(is_retry, sleeps, max_attempts, **kwargs)
+
+    def swipe(self, direction, focus=None):
+        self.get_ui()
+
+        def _direction_vector_of(dir_):
+            if dir_ == 'up':
+                dir_vec = [0, -0.1]
+            elif dir_ == 'down':
+                dir_vec = [0, 0.1]
+            elif dir_ == 'left':
+                dir_vec = [-0.1, 0]
+            elif dir_ == 'right':
+                dir_vec = [0.1, 0]
+            elif type(dir_) in (list, tuple):
+                dir_vec = dir_
+            else:
+                raise TypeError('Unsupported direction type {}. '
+                                'Only "up/down/left/right" or 2-list/2-tuple available.'.format(type(dir_)))
+            return dir_vec
+
         @logwrap
-        def swipe(direction, focus, duration):
-            return self.poco_ui.swipe(direction, focus, duration)
+        def swipe(direction, focus):
+            pos = self.poco_ui.get_position(focus)
+            vector = _direction_vector_of(direction)
+            return airtest_swipe(pos, vector=vector)
 
-        return swipe(direction, focus, duration)
-
-    def airtest_swipe(self, v2=None, vector=None, **kwargs):
-        return swipe_airtest(self.airtest_ui, v2, vector, kwargs)
+        return swipe(direction, focus)
 
     def wait(self, timeout=UI_TIME_OUT, interval=0.5, intervalfunc=None):
+        self.get_ui()
         if self.is_airtest:
             airtest_wait(self.airtest_ui, timeout, interval, intervalfunc)
         else:
@@ -156,6 +182,7 @@ class AirTestUI(AbstractUI):
             return wait()
 
     def wait_for_appearance(self, timeout=UI_TIME_OUT):
+        self.get_ui()
         if self.is_airtest:
             airtest_wait(self.airtest_ui, timeout)
         else:
@@ -171,14 +198,20 @@ class AirTestUI(AbstractUI):
             start = time.time()
             while self.exists():
                 self.poco.sleep_for_polling_interval()
+                self.get_ui()
                 if time.time() - start > timeout:
                     raise PocoTargetTimeout('disappearance', self)
 
+        self.get_ui()
         wait_for_disappearance(timeout)
 
     def wait_click(self, timeout=UI_TIME_OUT):
         self.wait_for_appearance(timeout)
         self.click()
+
+    def wait_click_without_pic(self, timeout=UI_TIME_OUT):
+        self.wait_for_appearance(timeout)
+        self.click_without_pic()
 
     def wait_exists(self, timeout=UI_TIME_OUT):
         try:
@@ -190,7 +223,7 @@ class AirTestUI(AbstractUI):
     def send_keys(self, keys, enter=True, **kw):
         self.wait_click()
         sleep(0.5)
-        if self.is_ios_data or self.is_airtest:
+        if self.is_ios or self.is_airtest:
             text(keys, enter, **kw)
             sleep(0.5)
         else:
@@ -203,28 +236,61 @@ class AirTestUI(AbstractUI):
             return result
 
     def clear(self):
-        self.wait_click()
-        sleep(0.5)
 
         @logwrap
         def clear():
+            self.wait_click()
+            sleep(0.5)
             return self.poco_ui.set_text('')
-        clear()
-        sleep(0.5)
+
+        if self.is_ios:
+            ui = AirTestUI(name='delete')
+            ui.setUp(self.poco, self.is_ios, None)
+            self.poco_ui.long_click()
+            ui.wait_click()
+        else:
+            clear()
 
     def get_text(self):
+        self.get_ui()
         return self.poco_ui.get_text()
 
-    def find(self, direction='vertical', percent=0.3, duration=1.0, timeout=UI_TIME_OUT):
+    def get_position(self, focus):
+        self.get_ui()
+        return self.poco_ui.get_position(focus)
+
+    def get_bounds(self):
+        self.get_ui()
+        return self.poco_ui.get_bounds()
+
+    def child_count(self):
+        self.get_ui()
+        return len(self.poco_ui.children())
+
+    def get_name(self):
+        self.get_ui()
+        return self.poco_ui.get_name()
+
+    def find(self, direction='vertical', percent=0.3, duration=0.1, timeout=UI_TIME_OUT):
+
+        def get_ui_safe():
+            try:
+                self.get_ui()
+            except Exception as e:
+                self.poco_ui = None
+                print(e)
+
         @logwrap
         def find():
             start = time.time()
             while not self.exists():
                 self.poco.scroll(direction, percent, duration)
                 self.poco.sleep_for_polling_interval()
+                get_ui_safe()
                 if time.time() - start > timeout:
                     return
 
+        get_ui_safe()
         find()
 
     def assert_not_exists(self, msg=""):
@@ -264,23 +330,44 @@ class AirTestUI(AbstractUI):
         self.snapshot_catch()
 
     def snapshot_catch(self, fileName=None, msg=""):
+        """
+        截图，try catch 处理
+        :param fileName: 文件名称
+        :param msg: 消息
+        :return:
+        """
         try:
             airtest_snapshot(fileName, msg)
         except:
             pass
 
-
-
     # =======================================================================================#
 
-    def _poco_exists(self, is_retry=True, sleeps=2, max_attempts=2):
+    def _exists(self, is_retry=True, sleeps=2, max_attempts=2, **kwargs):
+
+        """
+        Check whether given target exists on device screen
+
+        判断是否存在，默认重试2次，每次停顿2秒
+        :param is_retry: 是否重试
+        :param sleeps: 每次停顿时间
+        :param max_attempts: 2次
+        :return:
+        """
+
         @logwrap
         def exists():
             count = max_attempts
             if not is_retry:
                 count = 1
 
-            def retry_exists():
+            def air_retry_exists():
+                return loop_find(self.airtest_ui, timeout=UI_TIME_OUT, **kwargs)
+
+            def poco_retry_exists():
+                if self.poco_ui is None:
+                    self.get_ui()
+                    return False
                 return self.poco_ui.attr('visible')
 
             r = Retrying(retry=retry_if_exception_type(TargetNotFoundError),
@@ -288,30 +375,13 @@ class AirTestUI(AbstractUI):
                          stop=stop_after_attempt(count),
                          reraise=True)
             try:
-                res = r(r, retry_exists)
-            except (PocoTargetRemovedException, PocoNoSuchNodeException):
+                res = r(r, air_retry_exists if self.is_airtest else poco_retry_exists)
+            except (PocoTargetRemovedException, PocoNoSuchNodeException, TargetNotFoundError):
                 res = False
 
             return res
 
         return exists()
-
-    def _air_exists(self, is_retry=True, sleeps=2, max_attempts=2, **kwargs):
-        if not is_retry:
-            max_attempts = 1
-
-        def retry_exists():
-            return loop_find(self.airtest_ui, timeout=UI_TIME_OUT, **kwargs)
-
-        r = Retrying(retry=retry_if_exception_type(TargetNotFoundError),
-                     wait=wait_fixed(sleeps),
-                     stop=stop_after_attempt(max_attempts),
-                     reraise=True)
-        try:
-            res = r(r, retry_exists)
-        except TargetNotFoundError:
-            res = False
-        return res
 
     def _air_touch(self, is_retry=True, sleeps=2, max_attempts=2, **kwargs):
         if not is_retry:
@@ -325,19 +395,3 @@ class AirTestUI(AbstractUI):
             r(r, touch, self.airtest_ui, **kwargs)
         except Exception as e:
             raise e
-
-
-class Node:
-    parent = 0
-    sibling = 1
-    child = 2
-    children = 3
-    offspring = 4
-    getitem = 5
-    freeze = 6
-
-    def __init__(self, is_ios_data, node_type, name=None, **kw):
-        self.node_type = node_type
-        self.name = name
-        self.kw = kw
-        self.is_ios_data = is_ios_data

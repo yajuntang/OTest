@@ -9,7 +9,9 @@ from library.utils.thread_utils import StopStatusThread
 
 
 class AndroidApp(App):
-
+    """
+    AndroidApp
+    """
     def __init__(self, app_name=None, version_name=None, version_code=None, app_url=None):
         super().__init__("Android", app_name, version_name, version_code, app_url)
         self.check_poco_service = None

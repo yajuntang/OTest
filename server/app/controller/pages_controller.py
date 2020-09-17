@@ -10,7 +10,11 @@ pages_api = Blueprint("pages_api", __name__)
 @pages_api.route("/save_page_data", methods=['post'])
 @model_request(cls=SavePageDataRequest)
 def save_page_data(data: SavePageDataRequest):
-
+    """
+    保存页面的数据
+    :param data:
+    :return:
+    """
     names = [item for item in map(lambda item: item.name, data.data)]
 
     set_name = set(names)
@@ -37,6 +41,11 @@ def save_page_data(data: SavePageDataRequest):
 @pages_api.route("/del_page_data", methods=['post'])
 @model_request(cls=SavePageDataRequest)
 def del_page_data(data: SavePageDataRequest):
+    """
+    删除页面数据
+    :param data:
+    :return:
+    """
     version = service.find_version_by_id(data.version_id)
     if version is None:
         return make_error_response("版本错误")

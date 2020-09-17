@@ -12,6 +12,10 @@ plan_api = Blueprint("plan_api", __name__)
 @plan_api.route("/get_plans")
 @cross_origin()
 def get_plans():
+    """
+    获取测试计划列表
+    :return:
+    """
     plans = service.find_all_plan()
     return make_response(plans)
 
@@ -19,6 +23,11 @@ def get_plans():
 @plan_api.route("/add_plan", methods=['post'])
 @model_request(cls=PlanHandleRequest)
 def add_plan(data: PlanHandleRequest):
+    """
+    添加测试计划
+    :param data:
+    :return:
+    """
     version = service.find_version_by_id(data.version_id)
     if version is None:
         return make_error_response("版本错误")
@@ -39,6 +48,11 @@ def add_plan(data: PlanHandleRequest):
 @plan_api.route("/copy_plan", methods=['post'])
 @model_request(cls=PlanHandleRequest)
 def copy_plan(data: PlanHandleRequest):
+    """
+    复制测试计划
+    :param data:
+    :return:
+    """
     plan: PlanModel = service.find_plan_by_id(data.plan_id)
 
     if data.version_id is None and plan.parent_id is not None:
@@ -66,6 +80,11 @@ def copy_plan(data: PlanHandleRequest):
 @plan_api.route("/del_plan", methods=['post'])
 @model_request(cls=PlanHandleRequest)
 def del_plan(data: PlanHandleRequest):
+    """
+    删除测试计划
+    :param data:
+    :return:
+    """
     plan = service.find_plan_by_id(data.plan_id)
     service.del_plan(plan)
     if plan.parent_id is  None:
@@ -80,6 +99,11 @@ def del_plan(data: PlanHandleRequest):
 @plan_api.route("/update_selected_page_node", methods=['post'])
 @model_request(cls=PlanHandleRequest)
 def update_selected_page_node(data: PlanHandleRequest):
+    """
+    更新测试计划中选择的测试页面
+    :param data:
+    :return:
+    """
     names = [item for item in map(lambda item: item.name, data.data)]
 
     set_name = set(names)
@@ -99,6 +123,11 @@ def update_selected_page_node(data: PlanHandleRequest):
 @plan_api.route("/save_plan_data", methods=['post'])
 @model_request(cls=PlanHandleRequest)
 def save_plan_data(data: PlanHandleRequest):
+    """
+    保存测试计划中的页面数据，
+    :param data:
+    :return:
+    """
     names = [item for item in map(lambda item: item.name, data.data)]
 
     set_name = set(names)
@@ -118,6 +147,11 @@ def save_plan_data(data: PlanHandleRequest):
 @plan_api.route("/del_plan_data", methods=['post'])
 @model_request(cls=PlanHandleRequest)
 def del_plan_data(data: PlanHandleRequest):
+    """
+    删除测试计划的页面数据
+    :param data:
+    :return:
+    """
     plan = service.find_plan_by_id(data.plan_id)
 
     if plan is None:

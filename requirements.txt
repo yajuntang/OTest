@@ -13,7 +13,7 @@ Flask-Cors==3.0.8
 hrpc==1.0.8
 idna==2.9
 itsdangerous==1.1.0
-Jinja2==2.11.2
+Jinja2==2.11.3
 MarkupSafe==1.1.1
 mss==4.0.3
 numpy==1.19.0

@@ -9,7 +9,7 @@ decorator==4.4.2
 deprecation==2.1.0
 facebook-wda==0.2.1
 Flask==1.1.2
-Flask-Cors==3.0.8
+Flask-Cors==3.0.9
 hrpc==1.0.8
 idna==2.9
 itsdangerous==1.1.0

@@ -17,7 +17,7 @@ Jinja2==2.11.2
 MarkupSafe==1.1.1
 mss==4.0.3
 numpy==1.19.0
-opencv-contrib-python==3.4.2.17
+opencv-contrib-python==3.4.7.28
 packaging==20.4
 Pillow==7.1.2
 pocoui==1.0.79

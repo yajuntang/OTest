@@ -1,21 +1,18 @@
-/log/
-*~
-.DS_Store
-.idea/gradle.xml
-.idea/misc.xml
-.idea/runConfigurations.xml
-.idea/codeStyles/codeStyleConfig.xml
-.idea/codeStyles/Project.xml
-gradle.properties
-gradlew
-gradlew.bat
-__pycache__/
-.idea/hkbn.iml
-.idea/workspace.xml
-.idea/modules.xml
-.idea/vcs.xml
-/server/app/storage/
-/server/static/task_report/
+# 核心敏感文件
+.env
+config/ai_settings.yaml
 
-!/src/page/gen_readme.py
-/src/page/gen_readme.py
+# Python 环境与缓存
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# 日志与报告
+logs/
+report/
+allure-results/
+
+# Mac 临时文件
+.DS_Store

@@ -1,22 +1,35 @@
-
-
-from library.application.AndroidApp import AndroidApp
+# main.py
+import logging
+from airtest.core.api import connect_device, auto_setup
+from poco.drivers.android.uiautomation import AndroidUiautomationPoco
 from src.page.demo_page import DemoPage
 
+# 配置日志：展现资深老兵对调试信息的掌控
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-pages = [DemoPage]
+def run_test():
+    """自动化测试主入口"""
+    logging.info("🚀 正在初始化自动化测试环境...")
 
-app = AndroidApp("com.otest.android")
-app.start_test(pages, device_id="LMA710EAW83530563")
-# app.start_test(pages, ip="127.0.0.1", port="7555")
-# app.start_test(pages, device_id="emulator-5554")#模拟器
+    # 1. 连接设备（建议参数化，方便后期接入云真机平台）
+    auto_setup(__file__)
+    device = connect_device("Android:///")
+    poco = AndroidUiautomationPoco(device)
+
+    # 2. 业务链路执行
+    try:
+        demo = DemoPage(poco)
+
+        # 演示：执行带 AI 自愈的登录流程
+        if demo.login("yajun_tang", "pwd123456"):
+            logging.info("🎯 测试任务圆满完成！")
+        else:
+            logging.error("❌ 测试任务因定位失效中断，请复盘 AI 自愈日志。")
+
+    except Exception as e:
+        logging.critical(f"💥 运行过程中发生未捕获异常: {e}")
 
 
-# app = IOSApp("com.otest.ios")
-# app.start_test(pages, ip="127.0.0.1", port="8100")
-# app.start_test(pages) # 不写就使用默认值的
-
-
-# export PYTHONPATH=$PYTHONPATH:./library
-# alias python3="/usr/local/bin/python3"
+if __name__ == "__main__":
+    run_test()

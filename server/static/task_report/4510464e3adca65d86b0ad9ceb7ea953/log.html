@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+    <title>test01 </title>
+    
+    <!--[if lt IE 9]>
+    <script src="https://css3-mediaqueries-js.googlecode.com/svn/trunk/css3-mediaqueries.js"></script>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link href="http://localhost:9000/static/css/report.css" rel="stylesheet">
+
+    <script src="http://localhost:9000/static/js/jquery-1.10.2.min.js"></script>
+    <script src="http://localhost:9000/static/js/jquery-lang.js" charset="utf-8" type="text/javascript"></script>
+    <script src="http://localhost:9000/static/js/langpack/zh_CN.js" charset="utf-8" type="text/javascript"></script>
+    <script src="http://localhost:9000/static/js/lazyload.js" charset="utf-8" type="text/javascript"></script>
+    <script type="text/javascript">
+      data = {"steps": [{"title": "home\u9875\u9762\u5934\u90e8\u767b\u5165\u529f\u80fd", "time": 1582610447.680355, "code": {"name": "home\u9875\u9762\u5934\u90e8\u767b\u5165\u529f\u80fd", "args": []}, "screen": {"src": null, "rect": [], "pos": [], "vector": [], "confidence": null}, "desc": null, "traceback": null, "assert": null}, {"title": "stop_app", "time": 1582610448.8270562, "code": {"name": "stop_app", "args": [{"key": "package", "value": "com.hkbn.myAccount"}]}, "screen": {"src": null, "rect": [], "pos": [], "vector": [], "confidence": null}, "desc": null, "traceback": null, "assert": null}, {"title": "start_app", "time": 1582610451.226899, "code": {"name": "start_app", "args": [{"key": "package", "value": "com.hkbn.myAccount"}, {"key": "activity", "value": null}]}, "screen": {"src": null, "rect": [], "pos": [], "vector": [], "confidence": null}, "desc": null, "traceback": null, "assert": null}, {"title": "Wait", "time": 1582610451.6420858, "code": {"name": "wait", "args": []}, "screen": {"src": null, "rect": [], "pos": [], "vector": [], "confidence": null}, "desc": "\u7b49\u5f85\u76ee\u6807\u56fe\u7247\u51fa\u73b0", "traceback": null, "assert": null}, {"title": "wait_for_appearance", "time": 1582610451.642793, "code": {"name": "wait_for_appearance", "args": [{"key": "timeout", "value": 120}]}, "screen": {"src": null, "rect": [], "pos": [], "vector": [], "confidence": null}, "desc": null, "traceback": null, "assert": null}, {"title": "click", "time": 1582610452.703697, "code": {"name": "click", "args": []}, "screen": {"src": "log/1582610452017.jpg", "rect": [], "pos": [], "vector": [], "confidence": null, "_filepath": "log/1582610452017.jpg", "thumbnail": "log/1582610452017_small.jpg"}, "desc": null, "traceback": null, "assert": null}, {"title": "wait_for_appearance", "time": 1582610573.0503418, "code": {"name": "wait_for_appearance", "args": [{"key": "timeout", "value": 120}]}, "screen": {"src": null, "rect": [], "pos": [], "vector": [], "confidence": null}, "desc": null, "traceback": "Traceback (most recent call last):\n  File \"/usr/local/lib/python3.7/site-packages/airtest/utils/logwraper.py\", line 78, in wrapper\n    res = f(*args, **kwargs)\n  File \"/Users/tangyajun/Documents/project/myhkbn-aut-test/library/base/ui/UI.py\", line 170, in wait_for_appearance\n    self.poco_ui.wait_for_appearance(timeout)\n  File \"/usr/local/lib/python3.7/site-packages/poco/proxy.py\", line 681, in wait_for_appearance\n    raise PocoTargetTimeout('appearance', self)\npoco.exceptions.PocoTargetTimeout: Waiting timeout for appearance of \"UIObjectProxy of \"\ufeff\u8a2a\u5ba2\"\"\n", "assert": null}, {"title": "Snapshot", "time": 1582610573.424273, "code": {"name": "snapshot", "args": [{"key": "filename", "value": null}, {"key": "msg", "value": ""}]}, "screen": {"src": "log/1582610573369.jpg", "rect": [], "pos": [], "vector": [], "confidence": null, "_filepath": "log/1582610573369.jpg", "thumbnail": "log/1582610573369_small.jpg"}, "desc": "\u622a\u56fe\u63cf\u8ff0: ", "traceback": null, "assert": null}, {"title": "stop_app", "time": 1582610574.568518, "code": {"name": "stop_app", "args": [{"key": "package", "value": "com.hkbn.myAccount"}]}, "screen": {"src": null, "rect": [], "pos": [], "vector": [], "confidence": null}, "desc": null, "traceback": null, "assert": null}], "name": "/Users/tangyajun/Documents/project/myhkbn-aut-test/log/ios/1582610447/__init__.log", "scale": 0.5, "test_result": false, "run_end": 1582610574.568518, "run_start": 1582610447.680303, "static_root": "http://localhost:9000/static/", "lang": "zh", "records": [], "info": {"name": "__init__.py", "path": "/Users/tangyajun/Documents/project/myhkbn-aut-test/library/author/__init__.py", "author": "YA-TEST", "title": "", "desc": ""}}
+      lang = new Lang();
+      lang.init({
+        defaultLang: 'en',
+        currentLang: 'zh'
+      });
+    </script>
+  </head>
+
+  <body>
+
+    <div class="container-fluid">
+      <div class="row">
+
+        <div id="main" class="main col-md-12">
+          <div id="back_multi"></div>
+          <h1 class="title">test01 </h1>
+          
+          <div class="summary" >
+
+            <div class="show-horizontal">
+              <div class="info info1">
+                <div class="info-left">
+                  <img id='result-img' />
+                </div>
+                <div class="info-right">
+                  <div class="info-title"><span lang='en'>test01</span>
+                    <label id='result-desc' lang="en"></label>
+                  </div>
+                  <div class="info-content">
+                    <div class='info-sub start'></div>
+                    <div class='info-sub time'></div>
+                  </div>
+                  <div class="info-toal">
+                    <div class="info-step">
+                      <span class="info-name" lang="en">Steps: </span>
+                      <span class="info-value">9</span>
+                    </div>
+                    <div class="info-time">
+                      <span class="info-name" lang="en">Time: </span>
+                      <span class="info-value duration">xxx</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="info info2">
+                <div class="info-left"></div>
+                <div class="info-right">
+                  <div class="info-title"><span lang='en'>Executors</span></div>
+                  <div class="info-content">
+                    <div class="info-execute">
+                      <div class="circle-img"></div>
+                      
+                        <div class="info-name"><span lang="en">Author:</span> YA-TEST</div>
+                      
+                    </div>
+                    <div class="info-execute">
+                      <div class="circle-img"></div>
+                      <div class="info-file" title="/Users/tangyajun/Documents/project/myhkbn-aut-test/library/author/__init__.py">__init__.py
+                        <img id="copy_path" path="/Users/tangyajun/Documents/project/myhkbn-aut-test/library/author/__init__.py" title="copy file path to clipboard" src="http://localhost:9000/static/image/copy.svg" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            
+          </div>
+          <div class="device" id='device'>
+          </div>
+
+          <div class="gallery">
+            <div class="info-title"><span lang="en">Quick view</span></div>
+            <div class="content">
+            </div>
+          </div>
+
+          <!-- 可以额外显示自定义模块，支持插入Html内容 -->
+          
+          <!--单步-->
+          
+
+          <div class="steps">
+            <div class="content">
+              <div class="steps-head">
+                <div class="head-left">
+                  <div class="order" id='order'><span lang="en">order</span></div>
+                  <div class="order" id='duration'><span lang="en">duration</span></div>
+                  <div class="order" id='status'><span lang="en">status</span></div>
+                </div>
+                <div class="head-right">
+                  <span lang="en" class="jump-wrong" id='jump-wrong'>Jump to wrong step</span>
+                  <span lang="en">Filter by:</span>
+                  <span class="filters">
+                    <span lang="en" class="filter" id="all" alt="show all steps">All</span>
+                    <span lang="en" class="filter" id='success' alt="show success steps only">Success</span>
+                    <span lang="en" class="filter" id='fail' alt="show failed steps only">Failed</span>
+                    <span lang="en" class="filter" id="assert" alt="show steps with assertion only">Assert</span>
+                  </span>
+                </div>
+              </div>
+              <div class="steps-content">
+                <div class="step-left" id='step-left'>
+                  <div class="step-list"></div>
+                  <div id="pageTool"></div>
+                </div>
+                <div class="step-right" id='step-right'></div>
+              </div>
+            </div>
+            
+            </div>
+        </div>
+
+      
+      <div class="footer">
+        <div class="footer-content">
+          <div class="foo">
+            <div class="interfaces">
+              <a class="icon" href="https://github.com/AirtestProject/Airtest"  target="_blank">
+                <img src="http://localhost:9000/static/image/Airtest.png" alt="airtest">
+              </a>
+              <a class="icon" href="https://github.com/AirtestProject/poco"  target="_blank">
+                <img src="http://localhost:9000/static/image/poco.png" alt="Poco">
+              </a>
+            </div>
+          </div>
+          <div class="foo">
+            <div class="apps">
+              <a class="icon ide" href="http://airtest.netease.com/"  target="_blank">
+                <img src="http://localhost:9000/static/image/AirtestIDE.png" alt="AirtestIDE">
+              </a>
+              <a class="icon" href="https://airlab.163.com/"  target="_blank">
+                <img src="http://localhost:9000/static/image/AirLab.png" alt="AirLab">
+              </a>
+            </div>
+          </div>
+          <div class="foo">
+            <div class="corp">
+                <img src="http://localhost:9000/static/image/netease.png" alt="NetEase">
+                <span lang="en">© 1997 - 2019 NetEase, Inc. All Rights Reserved.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      </div>
+      <!-- 录屏 -->
+      <div class="row gif-wrap show">
+          <div class="menu">
+            <div class="pattern pattern1">
+              <div class="minimize">
+                <img title="minimize" src="http://localhost:9000/static/image/minimize.svg" />
+              </div>
+              <div class="close">
+                <img title="close" src="http://localhost:9000/static/image/close.svg" />
+              </div>
+            </div>
+            <div class="pattern pattern2">
+              <div class="maximize">
+                <img title="maximize" src="http://localhost:9000/static/image/maximize.svg" />
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            
+          </div>
+        </div>
+    </div>
+
+  <link href="http://localhost:9000/static/css/monokai_sublime.min.css" rel="stylesheet">  
+  <script src="http://localhost:9000/static/js/highlight.min.js"></script>  
+  <script type="text/javascript" src="http://localhost:9000/static/js/paging.js"></script>
+  <script src="http://localhost:9000/static/js/report.js"></script>  
+</body>
+</html>

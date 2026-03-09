@@ -1,68 +1,39 @@
-from flask import Flask, redirect, request
-from flask_cors import CORS
+import os
+import eventlet
+from flask import Flask
+from flask_socketio import SocketIO
+from server.server_config import HOST, PORT
+from server.app.controller import exec_controller, pages_controller, plan_controller
 
-from library.client.Client import Client
-from server.app.controller.exec_controller import exec_api
-from server.app.controller.page_version_controller import pages_version_api
-from server.app.controller.pages_controller import pages_api
-from server.app.controller.plan_controller import plan_api
+# 建议在 requirements.txt 中补充 flask-socketio 和 eventlet
+app = Flask(__name__, static_folder='static', static_url_path='/')
 
-app = Flask(__name__)
-app.secret_key = "1ms9fm49g8wn3ir1"  # 设置session时，必须要加盐，否则报错
-CORS(app, supports_credentials=True, resources=r'/*')
+# 配置跨域，允许前端 React 页面进行 WebSocket 实时监听底层动作
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
-app.register_blueprint(pages_api)  # 页面列表接口
-app.register_blueprint(pages_version_api)  # 版本接口
-app.register_blueprint(plan_api)  # 测试计划接口
-app.register_blueprint(exec_api)  # 执行测试接口
-session_id = None
-
-
-@app.route('/static/task_report')
-def static_task_report():
-    """
-    显示任务报告
-    :return:
-    """
-    return redirect(request.path)
+app.register_blueprint(exec_controller.bp)
+app.register_blueprint(pages_controller.bp)
+app.register_blueprint(plan_controller.bp)
 
 
 @app.route('/')
 def index():
-    """
-    前端页面
-    :return:
-    """
-    return redirect('/static/index.html')
+    return app.send_static_file('index.html')
 
 
-@app.route('/test_pages')
-def test_pages():
-    """
-    前端页面
-    :return:
-    """
-    return redirect('/static/index.html')
+# --- 新增：实时执行流的 WebSocket 命名空间 ---
+@socketio.on('connect', namespace='/test_exec')
+def handle_connect():
+    print("前端 React 已连接到实时执行监控通道")
 
 
-@app.route('/test_plans')
-def test_plans():
-    """
-    前端页面
-    :return:
-    """
-    return redirect('/static/index.html')
-
-
-@app.route('/test_exec')
-def test_exec():
-    """
-    前端页面
-    :return:
-    """
-    return redirect('/static/index.html')
+@socketio.on('disconnect', namespace='/test_exec')
+def handle_disconnect():
+    print("前端已断开实时监控")
 
 
 if __name__ == '__main__':
-    Client.run('localhost', 9000)
-    app.run('localhost', 9000)
+    print(f"OTest 自动化测试中台启动中: http://{HOST}:{PORT}")
+
+    # 替换原本的 app.run()，使用 socketio 启动，支撑双向长连接
+    socketio.run(app, host=HOST, port=PORT, debug=True)

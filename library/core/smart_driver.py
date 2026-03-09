@@ -1,43 +1,69 @@
 import logging
+import base64
 from library.ai_engine.visual_locator import VisualLocator
-from library.ai_engine.token_manager import TokenManager
 
+
+# 如果引入了 WebSocket，可以在此做实时推送
+# from server.manager import socketio
 
 class SmartDriver:
-    """
-    10年资深老兵实战封装：UI 自动化智能驱动层
-    实现核心：原生 Poco 失败后，自动启动 AI 视觉对冲 (Hedging) 逻辑。
-    """
+    def __init__(self, ui_driver, app_version, task_id=None):
+        self.driver = ui_driver
+        self.app_version = app_version
+        self.task_id = task_id
+        self.visual_locator = VisualLocator()
 
-    def __init__(self, poco_instance):
-        self.poco = poco_instance
-        self.tm = TokenManager()
-        self.vl = VisualLocator()
-
-    def smart_click(self, name, selector, anchor_img=None, timeout=10):
-        """带有自愈能力的智能点击"""
+    def push_live_stream(self, action, element_name, status="success", msg=""):
+        """通过 WebSocket 向前端推送实时执行状态和画面"""
         try:
-            # 1. 优先尝试原生定位
-            element = self.poco(**selector).wait(timeout)
-            if element.exists():
-                element.click()
-                logging.info(f"✅ [{name}] 元素定位成功并点击")
-                return True
-            raise Exception("Poco element not found")
+            payload = {
+                "task_id": self.task_id,
+                "action": action,
+                "element": element_name,
+                "status": status,
+                "message": msg,
+                # 如果要做实时录播，可以把截图转 base64 传给 React 前端
+                # "image": self._get_current_screen_base64()
+            }
+            # socketio.emit('live_execution_stream', payload, namespace='/test_exec')
+            logging.info(f"[Live Stream] {action} {element_name} - {status}")
+        except Exception as e:
+            logging.error(f"Live stream push failed: {e}")
+
+    def smart_click(self, element_name, locator_expr, image_template=None):
+        """智能点击：原生树定位 -> 失败降级 -> AI 视觉自愈 -> 落库回传"""
+        try:
+            # 1. 常规执行：使用前端配置的 Poco 表达式
+            logging.info(f"尝试原生点击元素: {element_name} -> {locator_expr}")
+            self.driver.click(locator_expr)
+            self.push_live_stream("click", element_name, "success", "原生节点点击成功")
+            return True
 
         except Exception as e:
-            logging.warning(f"⚠️ [{name}] 原生定位失效: {e}，尝试 AI 智能自愈...")
+            logging.warning(f"前端下发的原生节点失效，触发 AI 视觉自愈: {str(e)}")
 
-            # 2. 检查 Token 预算并启动 AI 视觉
-            if self.tm.can_consume():
-                # 先尝试 OpenCV (零成本)，再尝试 LLM (高精度)
-                pos = self.vl.find_by_opencv(anchor_img) or self.vl.find_by_llm(name)
+            # 2. 降级执行：调用 AI 视觉引擎进行推测
+            if image_template:
+                current_screen = self.driver.snapshot()
+                target_coords = self.visual_locator.find_element(current_screen, image_template)
 
-                if pos:
-                    self.poco.click(pos)
-                    self.tm.record_usage(500)  # 记录成本
-                    logging.info(f"🔥 [{name}] AI 自愈成功，点击位置: {pos}")
+                if target_coords:
+                    self.driver.click(target_coords)  # 基于推测坐标点击
+
+                    # 3. 事件回传：通知前端平台该元素树已变更，AI代替点击了
+                    healing_msg = f"⚠️ 树定位失效，已通过 AI 视觉推测坐标 {target_coords} 执行"
+                    self.push_live_stream("click", element_name, "warning", healing_msg)
+                    self._report_healing_to_platform(element_name, locator_expr, target_coords)
                     return True
+                else:
+                    error_msg = f"AI 自愈失败: 找不到元素 {element_name}"
+                    self.push_live_stream("click", element_name, "error", error_msg)
+                    raise Exception(error_msg)
+            else:
+                self.push_live_stream("click", element_name, "error", str(e))
+                raise e
 
-            logging.error(f"❌ [{name}] 彻底定位失败，触发质量预警。")
-            return False
+    def _report_healing_to_platform(self, element_name, old_expr, new_coords):
+        """记录自愈事件到后端的 task_report 中，让用户在网页报告中能看到高亮提示"""
+        # service.record_healing_event(self.task_id, element_name, old_expr, new_coords)
+        logging.warning(f"[平台数据回传] 建议登录 OTest 更新 {element_name} 的表达式")

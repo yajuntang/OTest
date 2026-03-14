@@ -1,26 +1,56 @@
 # OTest
 
+移动端（Android / iOS）自动化测试管理平台，支持 Airtest、Poco，通过 Web 管理测试页面、版本变量与测试计划并执行用例。
+
+### 克隆
+
+```bash
+gh repo clone yajuntang/OTest
+cd OTest
+```
+
+### 环境要求
+
+* Python 3.7+
+* 安装依赖：`pip install -r requirements.txt`
+* 启动服务：在项目根目录执行 `python server/manager.py`
+* 默认地址：`http://localhost:9000`
+
+可选环境变量：
+
+* `OTEST_SECRET_KEY`：用于 Flask session 的密钥（建议部署时设置）
+
 ### 快速使用
-* 第一步   
-在 src/pages 目录下 新建一个 DemoPage 继承 TestPage   
-![图片](https://github.com/yajuntang/OTest/tree/master/server/static/guide_images/01.png)  
-* 第二步   
-运行 server 目录下的 manager.py   
-![图片](https://github.com/yajuntang/OTest/tree/master/server/static/guide_images/02.png)  
-* 第三步   
-新建一个版本计划,在这里可以单独为每一个页面或测试方法配置变量   
-![图片](https://github.com/yajuntang/OTest/tree/master/server/static/guide_images/03.png)  
-![图片](https://github.com/yajuntang/OTest/tree/master/server/static/guide_images/04.png)  
-![图片](https://github.com/yajuntang/OTest/tree/master/server/static/guide_images/05.png)  
-* 第四步   
-新建一个测试计划,并选择你要测试的界面，每一个测试计划可以为所选择的测试页面配置全局变量，注意，如果变量与页面所配置的变量相同，会覆盖其变量   
-![图片](https://github.com/yajuntang/OTest/tree/master/server/static/guide_images/06.png)  
-![图片](https://github.com/yajuntang/OTest/tree/master/server/static/guide_images/07.png)  
-* 第五步   
-选择Android，新建一个包名并选择它。执行一个测试的用例或用例组。   
-![图片](https://github.com/yajuntang/OTest/tree/master/server/static/guide_images/08.png)  
-![图片](https://github.com/yajuntang/OTest/tree/master/server/static/guide_images/09.png)  
-![图片](https://github.com/yajuntang/OTest/tree/master/server/static/guide_images/10.png)  
+
+* **第一步**  
+在 `src/page` 目录下新建一个 Page 类继承 `TestPage`（可参考 `src/page/demo_page.py`）。  
+
+![第一步](server/static/guide_images/01.png)
+
+* **第二步**  
+运行 `server` 目录下的 `manager.py`。  
+
+![第二步](server/static/guide_images/02.png)
+
+* **第三步**  
+新建一个版本计划，在这里可以单独为每一个页面或测试方法配置变量。  
+
+![第三步](server/static/guide_images/03.png)  
+![第四步](server/static/guide_images/04.png)  
+![第五步](server/static/guide_images/05.png)
+
+* **第四步**  
+新建一个测试计划，并选择要测试的界面；可为所选测试页面配置全局变量（与页面变量同名时会覆盖）。  
+
+![第六步](server/static/guide_images/06.png)  
+![第七步](server/static/guide_images/07.png)
+
+* **第五步**  
+选择 Android，新建包名并选择后，执行单个用例或用例组。  
+
+![第八步](server/static/guide_images/08.png)  
+![第九步](server/static/guide_images/09.png)  
+![第十步](server/static/guide_images/10.png)  
 ### API
 目前这里只列出测试开发中会用到的API   
 * App   

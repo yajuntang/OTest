@@ -1,39 +1,21 @@
 import os
-import eventlet
-from flask import Flask
-from flask_socketio import SocketIO
-from server.server_config import HOST, PORT
-from server.app.controller import exec_controller, pages_controller, plan_controller
 
-# 建议在 requirements.txt 中补充 flask-socketio 和 eventlet
-app = Flask(__name__, static_folder='static', static_url_path='/')
+from flask import Flask, redirect, request
+from flask_cors import CORS
 
-# 配置跨域，允许前端 React 页面进行 WebSocket 实时监听底层动作
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
+from library.client.Client import Client
+from server.app.controller.exec_controller import exec_api
+from server.app.controller.page_version_controller import pages_version_api
+from server.app.controller.pages_controller import pages_api
+from server.app.controller.plan_controller import plan_api
 
-app.register_blueprint(exec_controller.bp)
-app.register_blueprint(pages_controller.bp)
-app.register_blueprint(plan_controller.bp)
+app = Flask(__name__)
+# 设置 session 时必须设置 secret_key；可通过环境变量 OTEST_SECRET_KEY 覆盖
+app.secret_key = os.environ.get("OTEST_SECRET_KEY", "1ms9fm49g8wn3ir1")
+CORS(app, supports_credentials=True, resources=r'/*')
 
-
-@app.route('/')
-def index():
-    return app.send_static_file('index.html')
-
-
-# --- 新增：实时执行流的 WebSocket 命名空间 ---
-@socketio.on('connect', namespace='/test_exec')
-def handle_connect():
-    print("前端 React 已连接到实时执行监控通道")
-
-
-@socketio.on('disconnect', namespace='/test_exec')
-def handle_disconnect():
-    print("前端已断开实时监控")
-
-
-if __name__ == '__main__':
-    print(f"OTest 自动化测试中台启动中: http://{HOST}:{PORT}")
-
-    # 替换原本的 app.run()，使用 socketio 启动，支撑双向长连接
-    socketio.run(app, host=HOST, port=PORT, debug=True)
+app.register_blueprint(pages_api)  # 页面列表接口
+app.register_blueprint(pages_version_api)  # 版本接口
+app.register_blueprint(plan_api)  # 测试计划接口
+app.register_blueprint(exec_api)  # 执行测试接口
+session_id = None

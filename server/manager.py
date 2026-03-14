@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask, redirect, request
 from flask_cors import CORS
 
@@ -8,7 +10,8 @@ from server.app.controller.pages_controller import pages_api
 from server.app.controller.plan_controller import plan_api
 
 app = Flask(__name__)
-app.secret_key = "1ms9fm49g8wn3ir1"  # 设置session时，必须要加盐，否则报错
+# 设置 session 时必须设置 secret_key；可通过环境变量 OTEST_SECRET_KEY 覆盖
+app.secret_key = os.environ.get("OTEST_SECRET_KEY", "1ms9fm49g8wn3ir1")
 CORS(app, supports_credentials=True, resources=r'/*')
 
 app.register_blueprint(pages_api)  # 页面列表接口

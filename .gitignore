@@ -1,6 +1,16 @@
 /log/
 *~
 .DS_Store
+FETCH_HEAD
+.env
+.env.*
+!.env.example
+*.pyc
+__pycache__/
+.venv/
+venv/
+env/
+PostScene-upstream/
 .idea/gradle.xml
 .idea/misc.xml
 .idea/runConfigurations.xml
@@ -9,13 +19,13 @@
 gradle.properties
 gradlew
 gradlew.bat
-__pycache__/
 .idea/hkbn.iml
 .idea/workspace.xml
 .idea/modules.xml
 .idea/vcs.xml
 /server/app/storage/
 /server/static/task_report/
+*.egg-info/
 
 !/src/page/gen_readme.py
 /src/page/gen_readme.py

@@ -2,9 +2,11 @@
 *~
 .DS_Store
 FETCH_HEAD
+# 核心敏感文件
 .env
 .env.*
 !.env.example
+config/ai_settings.yaml
 *.pyc
 __pycache__/
 .venv/

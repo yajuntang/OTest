@@ -2,6 +2,7 @@
 *~
 .DS_Store
 FETCH_HEAD
+.idea/
 # 核心敏感文件
 .env
 .env.*

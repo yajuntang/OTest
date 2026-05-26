@@ -17,7 +17,7 @@ class IOSApp(App):
         elif device_id:
             self.device = retry_connect("ios:///http://{0}".format(device_id))
 
-        driver = iosPoco(self.driver, poll_interval=1)
+        driver = iosPoco(self.device, poll_interval=1)
         self.device = device()
 
         # 关闭截图

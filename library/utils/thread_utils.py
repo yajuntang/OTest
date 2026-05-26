@@ -45,7 +45,7 @@ class TaskThread(threading.Thread):  # The timer class is derived from the class
         self.exitcode = 0
         self.exception = None
         self.exc_traceback = ''
-        self.setDaemon(True)
+        self.daemon = True
         self.stopped = False
 
     def run(self):  # Overwrite run() method, put what you want the thread do here
@@ -81,7 +81,7 @@ class StopStatusThread(threading.Thread):
         self.args = args
         self.func = func
         self.client_thread = None
-        self.setDaemon(True)
+        self.daemon = True
         self.stopped = False
 
     def run(self):
@@ -97,4 +97,3 @@ class StopStatusThread(threading.Thread):
         :return:
         """
         self.stopped = True
-

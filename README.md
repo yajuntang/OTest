@@ -19,6 +19,28 @@ cd OTest
 可选环境变量：
 
 * `OTEST_SECRET_KEY`：用于 Flask session 的密钥（建议部署时设置）
+* `OTEST_HOST`：服务监听地址，默认 `127.0.0.1`
+* `OTEST_PORT`：服务端口，默认 `9000`
+* `OTEST_CORS_ORIGINS`：允许跨域访问的前端地址，多个地址用英文逗号分隔
+* `OTEST_AI_ENDPOINT`：可选，OpenAI-compatible Chat Completions 接口地址
+* `OTEST_AI_API_KEY`：可选，AI 接口密钥
+* `OTEST_AI_MODEL`：可选，AI 分析模型，默认 `gpt-4o-mini`
+
+### AI 辅助分析
+
+平台提供任务报告分析接口：
+
+```http
+POST /analyze_task_report
+Content-Type: application/json
+
+{
+  "group_id": "任务组 ID",
+  "task_id": "任务 ID"
+}
+```
+
+接口会读取任务日志和执行步骤，输出失败类型、证据片段和修复建议。未配置 AI 环境变量时会使用本地规则分析；配置 `OTEST_AI_ENDPOINT` 和 `OTEST_AI_API_KEY` 后，会额外调用兼容 Chat Completions 的接口生成中文总结。
 
 ### 快速使用
 

@@ -9,7 +9,6 @@ from typing import List, Dict
 
 from flask import make_response as response, request
 
-from library.base.test_page import TestPage
 from server.app.models.models import NodeModel, PlanModel, PageDataModel
 
 
@@ -109,6 +108,8 @@ def parse_modules(path, modules):
     :param modules:
     :return:
     """
+    from library.base.test_page import TestPage
+
     m = importlib.import_module(path.replace("/", "."))
     dirs = [item for item in os.listdir(get_module_path(m)) if
             item not in ("__pycache__", "__init__.py")]

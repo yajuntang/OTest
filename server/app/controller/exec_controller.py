@@ -5,6 +5,7 @@ from typing import List
 from flask import Blueprint, request
 from flask_cors import cross_origin
 
+from library.ai_engine.report_analyzer import ReportAnalyzer
 from library.client.Task import Task, Device, AppInfo
 from server.app.database.service import service
 from server.app.models.models import random_id, PlanModel
@@ -14,6 +15,14 @@ from server.app.utils import model_request, make_error_response, make_no_data_re
 from server.server_config import session_id
 
 exec_api = Blueprint("exec_api", __name__)
+report_analyzer = ReportAnalyzer()
+
+
+def find_task_or_error(group_id, task_id):
+    task = service.find_task_by_task_id(group_id, task_id)
+    if task is None:
+        return None, make_error_response('该任务已不存在')
+    return task, None
 
 
 @exec_api.route("/start_test", methods=['post'])
@@ -145,8 +154,12 @@ def start_error_test_by_task(data: TaskRequest):
     if data.selected_node is None or len(data.selected_node) == 0:
         return make_error_response("执行错误:没有找到错误的页面")
 
-    task = service.find_task_by_task_id(data.group_id, data.task_id)
+    task, error = find_task_or_error(data.group_id, data.task_id)
+    if error is not None:
+        return error
     plan = service.find_plan_by_id(task.plan_id)
+    if plan is None:
+        return make_error_response('该计划已不存在')
     version = service.find_version_by_id(plan.version_id)
     page_data = service.find_selected_pages_by_selected_node(version, data.selected_node)
     if len(page_data) == 0:
@@ -178,7 +191,9 @@ def stop_test(data: TaskRequest):
     :param data:
     :return:
     """
-    task = service.find_task_by_task_id(data.group_id, data.task_id)
+    task, error = find_task_or_error(data.group_id, data.task_id)
+    if error is not None:
+        return error
     task.pending_stop()
     service.update_task(task)
     return make_no_data_response()
@@ -192,7 +207,9 @@ def run_task(data: TaskRequest):
     :param data:
     :return:
     """
-    task = service.find_task_by_task_id(data.group_id, data.task_id)
+    task, error = find_task_or_error(data.group_id, data.task_id)
+    if error is not None:
+        return error
     task.run()
     task.report_url = data.report_url
     service.update_task(task)
@@ -221,7 +238,9 @@ def stop_task(data: TaskRequest):
     :param data:
     :return:
     """
-    task = service.find_task_by_task_id(data.group_id, data.task_id)
+    task, error = find_task_or_error(data.group_id, data.task_id)
+    if error is not None:
+        return error
     if task.is_pending_stop():
         task.user_stopped()
     else:
@@ -238,7 +257,9 @@ def finished_task(data: TaskRequest):
     :param data:
     :return:
     """
-    task = service.find_task_by_task_id(data.group_id, data.task_id)
+    task, error = find_task_or_error(data.group_id, data.task_id)
+    if error is not None:
+        return error
     if data.successful:
         task.successful()
     else:
@@ -267,7 +288,9 @@ def get_task_log(data: TaskRequest):
     :param data:
     :return:
     """
-    task = service.find_task_by_task_id(data.group_id, data.task_id)
+    task, error = find_task_or_error(data.group_id, data.task_id)
+    if error is not None:
+        return error
     log = service.get_log_by_task(task)
     data = []
     if log is not None:
@@ -288,7 +311,9 @@ def append_task_log(data: TaskRequest):
     """
     if data.log is None: return make_no_data_response()
     log = {'time': time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), 'log': data.log, 'type': data.log_type}
-    task = service.find_task_by_task_id(data.group_id, data.task_id)
+    task, error = find_task_or_error(data.group_id, data.task_id)
+    if error is not None:
+        return error
     service.append_log_by_task(task, json.dumps(log))
     return make_no_data_response()
 
@@ -301,7 +326,9 @@ def get_task_step(data: TaskRequest):
     :param data:
     :return:
     """
-    task = service.find_task_by_task_id(data.group_id, data.task_id)
+    task, error = find_task_or_error(data.group_id, data.task_id)
+    if error is not None:
+        return error
     log = service.get_step_by_task(task)
     data = []
     if log is not None:
@@ -310,6 +337,22 @@ def get_task_step(data: TaskRequest):
             if log is not None and len(log) > 2:
                 data.append(log)
     return json.dumps(data)
+
+
+@exec_api.route("/analyze_task_report", methods=['post'])
+@model_request(TaskRequest)
+def analyze_task_report(data: TaskRequest):
+    """
+    分析任务日志和步骤，输出失败原因与修复建议。
+    :param data:
+    :return:
+    """
+    task, error = find_task_or_error(data.group_id, data.task_id)
+    if error is not None:
+        return error
+    log = service.get_log_by_task(task)
+    step = service.get_step_by_task(task)
+    return make_response(report_analyzer.analyze(task, log, step))
 
 
 @exec_api.route("/append_task_step", methods=['post'])
@@ -322,7 +365,9 @@ def append_task_step(data: TaskStepRequest):
     """
     log = data.__dict__
     log['time'] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-    task = service.find_task_by_task_id(data.group_id, data.task_id)
+    task, error = find_task_or_error(data.group_id, data.task_id)
+    if error is not None:
+        return error
     service.append_step_by_task(task, json.dumps(log))
     return make_no_data_response()
 
@@ -359,6 +404,8 @@ def upload_report():
     group_id = request.headers['group_id']
     files = request.files
     task = service.find_task_by_task_id(group_id, task_id)
+    if task is None:
+        return make_error_response('该任务已不存在')
     index_html = service.save_report(task, files)
     if index_html is not None:
         task.report_url = '/static/task_report/' + task_id + "/" + index_html
